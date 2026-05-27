@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignalED — Sistema de Participación en Tiempo Real</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Figtree:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
+<style>
+:root{
+  --v1:#2D0F6B;--v2:#4A22A8;--v3:#7B52D4;--v4:#BBB8EC;--v5:#F0ECFB;
+  --gold:#F4C430;--white:#fff;
+  --tm:rgba(255,255,255,0.92);--ts:rgba(255,255,255,0.55);--tx:rgba(255,255,255,0.35);
+  --card:rgba(255,255,255,0.93);--cardb:rgba(255,255,255,0.5);
+  --ok:#22C55E;--warn:#F59E0B;--err:#EF4444;
+  --grad:linear-gradient(160deg,#7B52D4 0%,#4A22A8 45%,#2D0F6B 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh}
+body{font-family:'Figtree',sans-serif;background:var(--grad);color:var(--tm);min-height:100vh}
+
+/* ── LOGO ── */
+.logo{display:inline-flex;align-items:baseline;gap:0;line-height:1}
+.ls{font-family:'Pacifico',cursive;font-size:22px;color:var(--gold)}
+.le{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:#fff;letter-spacing:-1px}
+.ld{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;margin-left:2px;margin-bottom:4px}
+.logo-sm .ls{font-size:20px}.logo-sm .le{font-size:20px}.logo-sm .ld{width:4px;height:4px;margin-bottom:3px}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.1rem;background:rgba(45,15,107,0.7);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.08);position:sticky;top:0;z-index:100}
+.topbar-right{display:flex;align-items:center;gap:.5rem}
+.badge{background:rgba(255,255,255,0.92);color:#2D0F6B;border:.5px solid rgba(255,255,255,0.5);font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;padding:.6rem 1.1rem;background:rgba(0,0,0,0.18);border-bottom:1px solid rgba(255,255,255,0.07);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font-size:12px;font-weight:600;padding:5px 13px;border-radius:999px;border:none;background:transparent;color:rgba(255,255,255,0.55);cursor:pointer;transition:all .2s;white-space:nowrap;font-family:'Figtree',sans-serif}
+.tab.on{background:var(--gold);color:var(--v1)}
+.tab:hover:not(.on){background:rgba(255,255,255,0.08);color:#fff}
+
+/* ── SECTIONS ── */
+.section{padding:1.1rem;display:none;animation:fadeUp .25s ease}
+.section.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:.5px solid var(--cardb);border-radius:14px;padding:1rem 1.1rem;margin-bottom:.75rem;backdrop-filter:blur(6px)}
+.card-title{font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--v1);margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+.card-body{font-size:12px;color:var(--v2);line-height:1.6}
+
+/* ── INPUTS ── */
+input[type=text],input[type=password],input[type=number],textarea,select{
+  font-family:'Figtree',sans-serif;font-size:13px;
+  background:rgba(45,15,107,0.55);border:1px solid rgba(255,255,255,0.3);
+  border-radius:10px;color:#fff !important;padding:.55rem .85rem;width:100%;
+  outline:none;transition:border-color .2s;
+  -webkit-text-fill-color:#fff;
+}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.5);-webkit-text-fill-color:rgba(255,255,255,0.5)}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+select option{background:#4A22A8;color:#fff}
+textarea{resize:vertical;min-height:80px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,var(--gold) 0%,var(--gold) var(--val,75%),rgba(74,34,168,0.25) var(--val,75%),rgba(74,34,168,0.25) 100%);outline:none;margin:.7rem 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--gold);cursor:pointer;border:3px solid var(--v1);box-shadow:0 2px 6px rgba(0,0,0,0.25)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--gold);cursor:pointer;border:3px solid var(--v1);box-shadow:0 2px 6px rgba(0,0,0,0.25)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(74,34,168,0.25)}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Figtree',sans-serif;font-size:13px;font-weight:600;padding:.6rem 1.4rem;border-radius:999px;cursor:pointer;border:1px solid transparent;transition:all .2s;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn-gold{background:var(--gold);color:var(--v1)}
+.btn-gold:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2)}
+.btn-ghost:hover{background:rgba(255,255,255,0.18)}
+.btn-danger{background:rgba(239,68,68,0.15);color:#FCA5A5;border-color:rgba(239,68,68,0.3)}
+.btn-full{width:100%}
+.btn-sm{font-size:11px;padding:.35rem .85rem}
+
+/* ── ALERTS ── */
+.alert{display:flex;align-items:center;gap:8px;padding:.6rem .9rem;border-radius:10px;font-size:12px;font-weight:600;margin-bottom:.75rem}
+.a-warn{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FCD34D}
+.a-ok{background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);color:#86EFAC}
+.a-info{background:rgba(187,184,236,0.15);border:1px solid rgba(187,184,236,0.25);color:var(--v4)}
+
+/* ── STUDENT ROW ── */
+.srow{display:flex;align-items:center;gap:9px;padding:.55rem .75rem;border-radius:10px;border:1px solid rgba(74,34,168,0.18);background:rgba(74,34,168,0.06);margin-bottom:5px;transition:background .15s;color:var(--v1)}
+.srow:hover{background:rgba(74,34,168,0.12)}
+.av{width:30px;height:30px;border-radius:50%;background:rgba(74,34,168,0.18);color:var(--v2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Nunito',sans-serif}
+
+/* ── BARS ── */
+.bars{display:flex;align-items:flex-end;gap:2px;height:18px}
+.bar{width:5px;border-radius:2px;transition:all .3s}
+.b1{height:5px}.b2{height:9px}.b3{height:13px}.b4{height:18px}
+.bar-g{background:var(--ok)}.bar-y{background:var(--warn)}.bar-r{background:var(--err)}.bar-off{background:rgba(255,255,255,0.15)}
+
+/* ── METRICS ── */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:7px;margin-bottom:.9rem}
+.met{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:11px;padding:.8rem;text-align:center}
+.mnum{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900}
+.mlbl{font-size:10px;color:var(--ts);margin-top:2px;font-weight:600}
+
+/* ── PROGRESS ── */
+.prog{height:5px;border-radius:3px;background:rgba(255,255,255,0.12);margin:.35rem 0}
+.prog-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* ── STARS ── */
+.star{font-size:20px;cursor:pointer;color:rgba(255,255,255,0.15);transition:all .15s}
+.star.on{color:var(--gold)}
+.star:hover{transform:scale(1.2);color:var(--gold)}
+
+/* ── JUICIO ── */
+.jbtn{flex:1;padding:.8rem;border-radius:11px;border:1px solid;font-family:'Figtree',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s}
+.j-ok{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#86EFAC}
+.j-ok:hover{background:rgba(34,197,94,0.2);transform:translateY(-1px)}
+.j-no{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#FCA5A5}
+.j-no:hover{background:rgba(239,68,68,0.2);transform:translateY(-1px)}
+
+/* ── ROLE CARD ── */
+.rol-card{background:rgba(244,196,48,0.08);border:1px solid rgba(244,196,48,0.25);border-radius:12px;padding:.9rem 1rem;margin-bottom:.6rem}
+.rol-title{font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:.3rem}
+.rol-desc{font-size:12px;color:var(--ts);line-height:1.6}
+
+/* ── RULETA ── */
+.ruleta-icon{font-size:44px;display:inline-block;cursor:pointer;transition:transform .15s;filter:drop-shadow(0 0 10px rgba(244,196,48,0.35))}
+.ruleta-icon:hover{transform:scale(1.1) rotate(10deg)}
+.ruleta-icon.spinning{animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+.login-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);border-radius:20px;padding:1.75rem;width:100%;max-width:340px;backdrop-filter:blur(12px)}
+.login-opt{display:flex;align-items:center;gap:.85rem;padding:.85rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);cursor:pointer;transition:all .2s;margin-bottom:.5rem;text-align:left;width:100%}
+.login-opt:hover{border-color:var(--gold);background:rgba(244,196,48,0.07);transform:translateY(-1px)}
+.login-opt-title{font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:#fff;display:block}
+.login-opt-sub{font-size:11px;color:var(--ts)}
+
+/* ── PIN INPUT ── */
+.pin-wrap{display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,0.1)}
+.pin-title{font-size:12px;font-weight:600;color:var(--ts);margin-bottom:.25rem}
+
+/* ── CARD INNER TEXT FIX ── */
+.card{
+  color:var(--v1);
+  --ts:rgba(74,34,168,0.65);
+  --tx:rgba(74,34,168,0.45);
+  --tm:#2D0F6B;
+  --v4:#4A22A8;
+}
+.card span:not(.tag):not(.star):not(.badge):not(.btn),.card div:not(.card-title):not(.btn):not(.alert):not(.met):not(.bars):not(.bar):not(.prog):not(.prog-fill):not(.mgrid):not(.srow):not(.av):not(.rol-card):not(.tag){color:var(--v2)}
+.card .card-title{color:var(--v1)}
+.card .card-body{color:var(--v2)}
+.card .tag-gold{color:var(--gold) !important}
+.card .tag-ok{color:#15803d !important}
+.card .tag-warn{color:#b45309 !important}
+.card .tag-err{color:#b91c1c !important}
+.card .tag-purple{color:var(--v2) !important}
+.card .met{background:rgba(74,34,168,0.08);border:1px solid rgba(74,34,168,0.15)}
+.card .mlbl{color:var(--v2)}
+.card .mnum{color:var(--v1)}
+.card .btn-ghost{background:rgba(74,34,168,0.1);color:var(--v1);border-color:rgba(74,34,168,0.2)}
+.card .btn-ghost:hover{background:rgba(74,34,168,0.18)}
+.card .prog{background:rgba(74,34,168,0.12)}
+.card .rol-card{background:rgba(244,196,48,0.12);border-color:rgba(244,196,48,0.3)}
+.card .rol-title{color:#92690a}
+.card .rol-desc{color:var(--v2)}
+.card .star{color:rgba(74,34,168,0.2)}
+.card .star.on{color:var(--gold)}
+.card .jbtn.j-ok{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#15803d}
+.card .jbtn.j-no{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#b91c1c}
+.card .a-ok{color:#15803d}
+.card .a-warn{color:#b45309}
+.card .divider{background:rgba(74,34,168,0.1)}
+/* ── GEO DECORATION ── */
+.geo{position:fixed;pointer-events:none;z-index:0;border-radius:50%;border:1px solid rgba(255,255,255,0.04)}
+.geo1{width:420px;height:420px;top:-120px;right:-100px}
+.geo2{width:280px;height:280px;bottom:-60px;left:-90px}
+.geo3{width:160px;height:160px;top:40%;right:10px;border-color:rgba(244,196,48,0.05)}
+
+.content{position:relative;z-index:1;max-width:600px;margin:0 auto}
+.divider{height:1px;background:rgba(255,255,255,0.08);margin:.9rem 0}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}
+
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
+.tag-gold{background:rgba(244,196,48,0.15);color:var(--gold);border:1px solid rgba(244,196,48,0.25)}
+.tag-ok{background:rgba(34,197,94,0.12);color:#86EFAC;border:1px solid rgba(34,197,94,0.2)}
+.tag-warn{background:rgba(245,158,11,0.12);color:#FCD34D;border:1px solid rgba(245,158,11,0.2)}
+.tag-err{background:rgba(239,68,68,0.12);color:#FCA5A5;border:1px solid rgba(239,68,68,0.2)}
+.tag-purple{background:rgba(187,184,236,0.15);color:var(--v4);border:1px solid rgba(187,184,236,0.2)}
+</style>
+</head>
+<body>
+
+<div class="geo geo1"></div>
+<div class="geo geo2"></div>
+<div class="geo geo3"></div>
+
+<div class="content" id="app">
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div style="font-size:10px;font-weight:700;letter-spacing:4px;color:var(--ts);text-transform:uppercase;margin-bottom:.75rem">Aprende · Crece · Transforma</div>
+    <div style="display:inline-flex;align-items:baseline;gap:0;line-height:1;margin-bottom:.5rem">
+      <span style="font-family:'Pacifico',cursive;font-size:3rem;color:var(--gold)">Signal</span>
+      <span style="font-family:'Nunito',sans-serif;font-weight:900;font-size:3rem;color:#fff;letter-spacing:-2px">Ed</span>
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block;margin-left:3px;margin-bottom:7px"></span>
+    </div>
+    <p style="font-size:13px;color:var(--ts);margin-bottom:2rem;max-width:300px;line-height:1.6">Sistema de participación y comprensión en tiempo real para el aula</p>
+
+    <div class="login-card">
+      <div style="font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;margin-bottom:1rem">¿Cómo entrás hoy?</div>
+
+      <!-- DOCENTE -->
+      <button class="login-opt" onclick="showTeacherPin()">
+        <div style="font-size:22px;width:32px;text-align:center">👨‍🏫</div>
+        <div style="flex:1">
+          <span class="login-opt-title">Soy el docente</span>
+          <span class="login-opt-sub">Acceso completo — gestión y análisis</span>
+        </div>
+        <span style="color:var(--gold);font-size:16px">›</span>
+      </button>
+
+      <!-- ESTUDIANTE -->
+      <button class="login-opt" onclick="showStudentLogin()">
+        <div style="font-size:22px;width:32px;text-align:center">🎓</div>
+        <div style="flex:1">
+          <span class="login-opt-title">Soy estudiante</span>
+          <span class="login-opt-sub">Seleccioná tu nombre e ingresá tu código</span>
+        </div>
+        <span style="color:var(--v4);font-size:16px">›</span>
+      </button>
+
+      <!-- PIN DOCENTE -->
+      <div id="teacher-pin-form" style="display:none" class="pin-wrap">
+        <div class="pin-title" id="teacher-pin-hint">👨‍🏫 Ingresá tu código de docente</div>
+        <input type="password" id="teacher-pin-input" placeholder="Código..." maxlength="20" onkeydown="if(event.key==='Enter')loginTeacher()">
+        <button class="btn btn-gold btn-full" style="margin-top:.4rem" onclick="loginTeacher()">Entrar</button>
+        <div id="teacher-pin-error" style="font-size:11px;color:#FCA5A5;margin-top:.3rem;display:none">Código incorrecto</div>
+      </div>
+
+      <!-- LOGIN ESTUDIANTE -->
+      <div id="student-login-form" style="display:none" class="pin-wrap">
+        <div class="pin-title">🎓 Seleccioná tu nombre</div>
+        <select id="student-select" style="margin-bottom:.5rem" onchange="resetStudentPin()">
+          <option value="">Seleccioná tu nombre...</option>
+        </select>
+        <div class="pin-title">🔑 Ingresá tu código personal</div>
+        <input type="password" id="student-pin-input" placeholder="Tu código..." maxlength="20" onkeydown="if(event.key==='Enter')loginStudent()">
+        <button class="btn btn-gold btn-full" style="margin-top:.4rem" onclick="loginStudent()">Entrar a la clase</button>
+        <div id="student-pin-error" style="font-size:11px;color:#FCA5A5;margin-top:.3rem;display:none">Nombre o código incorrecto</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DOCENTE ══════════ -->
+<div id="teacher-view" style="display:none">
+  <div class="topbar">
+    <div class="logo logo-sm"><span class="ls">Signal</span><span class="le">Ed</span><span class="ld"></span></div>
+    <div class="topbar-right">
+      <span class="badge">👨‍🏫 Docente</span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="tTab('setup')">👥 Grupo</button>
+    <button class="tab" onclick="tTab('clase')">▶ Clase</button>
+    <button class="tab" onclick="tTab('juicio')">⚖️ Juicio</button>
+    <button class="tab" onclick="tTab('analisis')">📊 Análisis</button>
+    <button class="tab" onclick="tTab('fisica')">✏️ Física</button>
+  </div>
+
+  <!-- GRUPO -->
+  <div id="t-setup" class="section on">
+    <div class="card">
+      <div class="card-title">🔑 Mi código de docente</div>
+      <div class="card-body" style="margin-bottom:.75rem">Este código lo usás vos para entrar. Guardalo bien.</div>
+      <div style="display:flex;gap:6px">
+        <input type="password" id="teacher-code-input" placeholder="Establecé tu código..." maxlength="20">
+        <button class="btn btn-gold" onclick="saveTeacherCode()" style="flex-shrink:0;padding:.55rem 1rem;border-radius:10px">Guardar</button>
+      </div>
+      <div id="teacher-code-status" style="font-size:11px;color:#86EFAC;margin-top:.4rem;display:none">✓ Código guardado</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Lista de estudiantes</div>
+      <div id="student-list-display" style="margin-bottom:.75rem"></div>
+      <div style="display:flex;gap:6px;margin-bottom:.5rem">
+        <input type="text" id="new-student" placeholder="Nombre del estudiante...">
+        <input type="password" id="new-student-pin" placeholder="Código..." style="max-width:110px">
+        <button class="btn btn-gold" onclick="addStudent()" style="flex-shrink:0;padding:.55rem .85rem;border-radius:10px">+</button>
+      </div>
+      <div class="card-body">El código se lo compartís personalmente a cada estudiante.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📚 Clases / Temas</div>
+      <div id="clases-list" style="margin-bottom:.75rem"></div>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="new-clase" placeholder="Nombre de la clase o tema...">
+        <button class="btn btn-gold" onclick="addClass()" style="flex-shrink:0;padding:.55rem .85rem;border-radius:10px">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASE -->
+  <div id="t-clase" class="section">
+    <div class="card">
+      <div class="card-title">📚 Clase activa</div>
+      <select id="clase-select" onchange="selectClase(this.value)" style="margin-bottom:.5rem">
+        <option value="">Seleccioná una clase...</option>
+      </select>
+      <div id="clase-status" style="font-size:12px;color:var(--ts)">Sin clase activa</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎲 Ruleta de roles</div>
+      <div style="text-align:center;padding:.75rem 0">
+        <div class="ruleta-icon" id="ruleta-icon" onclick="girar()">🎲</div>
+        <div style="margin:.6rem 0">
+          <button class="btn btn-gold" onclick="girar()">Asignar roles al azar</button>
+        </div>
+      </div>
+      <div id="roles-display"></div>
+      <div id="role-stars-wrap" style="display:none">
+        <div class="divider"></div>
+        <div class="card-body" style="margin-bottom:.6rem">Calificá el desempeño al final de la clase:</div>
+        <div id="role-stars-content"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+        <div class="card-title" style="margin:0">📡 Señales en tiempo real</div>
+        <span class="tag tag-purple" id="avg-signal">Promedio: —</span>
+      </div>
+      <div id="alert-box"></div>
+      <div id="signals-list"></div>
+      <button class="btn btn-ghost btn-full btn-sm" style="margin-top:.5rem" onclick="refreshSignals()">↺ Actualizar</button>
+    </div>
+  </div>
+
+  <!-- JUICIO -->
+  <div id="t-juicio" class="section">
+    <div class="card">
+      <div class="card-title">⚖️ Lanzar El Juicio</div>
+      <div class="card-body" style="margin-bottom:.75rem">Escribí una afirmación y elegí la respuesta correcta. Los estudiantes votan sin verla.</div>
+      <textarea id="juicio-q" placeholder="Ej: La RAM es un tipo de memoria permanente..."></textarea>
+      <div style="margin-top:.75rem;margin-bottom:.5rem;font-size:12px;font-weight:600;color:var(--ts)">¿Cuál es la respuesta correcta?</div>
+      <div style="display:flex;gap:.6rem;margin-bottom:.75rem">
+        <button id="j-ans-ok" class="jbtn j-ok" onclick="selectJuicioAnswer('ok')" style="flex:1;opacity:0.45">✅ Inocente<br><span style="font-size:11px;font-weight:400">La afirmación es correcta</span></button>
+        <button id="j-ans-no" class="jbtn j-no" onclick="selectJuicioAnswer('no')" style="flex:1;opacity:0.45">❌ Culpable<br><span style="font-size:11px;font-weight:400">La afirmación es incorrecta</span></button>
+      </div>
+      <button class="btn btn-gold btn-full" onclick="lanzarJuicio()">⚖️ Lanzar El Juicio</button>
+    </div>
+    <div class="card" id="juicio-results-card" style="display:none">
+      <div class="card-title">📊 Votos en tiempo real</div>
+      <div id="juicio-correct-reveal" style="margin-bottom:.6rem"></div>
+      <div class="mgrid">
+        <div class="met"><div class="mnum" id="j-ok-count" style="color:#86EFAC">0</div><div class="mlbl">✅ Inocente</div></div>
+        <div class="met"><div class="mnum" id="j-no-count" style="color:#FCA5A5">0</div><div class="mlbl">❌ Culpable</div></div>
+        <div class="met"><div class="mnum" id="j-total">0</div><div class="mlbl">Total</div></div>
+        <div class="met"><div class="mnum" id="j-correct-count" style="color:var(--gold)">—</div><div class="mlbl">✓ Acertaron</div></div>
+      </div>
+      <div id="juicio-preview"></div>
+      <button class="btn btn-ghost btn-full btn-sm" style="margin-top:.5rem" onclick="cerrarJuicio()">Cerrar y guardar</button>
+    </div>
+  </div>
+
+  <!-- ANÁLISIS -->
+  <div id="t-analisis" class="section">
+    <div id="analisis-content"></div>
+  </div>
+
+  <!-- FÍSICA -->
+  <div id="t-fisica" class="section">
+    <div class="card">
+      <div class="card-title">✏️ Entrada manual — Versión física</div>
+      <div class="card-body" style="margin-bottom:.75rem">Completá los datos recopilados por El Radar durante la clase física.</div>
+      <select id="fisica-clase" style="margin-bottom:.75rem">
+        <option value="">Seleccioná la clase...</option>
+      </select>
+      <div id="fisica-students"></div>
+      <button class="btn btn-gold btn-full" style="margin-top:.75rem" onclick="guardarFisica()">Guardar datos físicos</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ESTUDIANTE ══════════ -->
+<div id="student-view" style="display:none">
+  <div class="topbar">
+    <div class="logo logo-sm"><span class="ls">Signal</span><span class="le">Ed</span><span class="ld"></span></div>
+    <div class="topbar-right">
+      <span class="badge" id="est-name-badge">Estudiante</span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="eTab('señal')">📡 Señal</button>
+    <button class="tab" onclick="eTab('juicio')">⚖️ Juicio</button>
+    <button class="tab" onclick="eTab('mi-rol')">🎭 Mi rol</button>
+    <button class="tab" onclick="eTab('mi-analisis')">📈 Mi avance</button>
+  </div>
+
+  <div id="e-señal" class="section on">
+    <div class="alert a-info" id="est-clase-info">📚 <span id="clase-info-text">Sin clase activa aún</span></div>
+    <div class="card">
+      <div class="card-title">📡 ¿Cómo vas entendiendo?</div>
+      <div class="card-body" style="margin-bottom:.75rem">Mové la barra para indicar tu comprensión en tiempo real.</div>
+      <input type="range" min="1" max="4" value="3" step="1" id="est-signal" oninput="sendSignal(this.value)">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:.25rem">
+        <div class="bars" id="est-bars">
+          <div class="bar b1 bar-g"></div><div class="bar b2 bar-g"></div>
+          <div class="bar b3 bar-g"></div><div class="bar b4 bar-off"></div>
+        </div>
+        <span id="est-signal-label" style="font-size:13px;font-weight:700;color:var(--ok)">Casi entendí</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx);margin-top:.35rem">
+        <span>No entendí nada</span><span>Entendí todo</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="e-juicio" class="section">
+    <div class="card">
+      <div class="card-title">⚖️ El Juicio al Concepto</div>
+      <div id="juicio-est-content">
+        <div class="card-body" style="text-align:center;padding:1.5rem 0">El docente aún no ha lanzado El Juicio.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="e-mi-rol" class="section">
+    <div class="card">
+      <div class="card-title">🎭 Mi rol de hoy</div>
+      <div id="rol-desc-text" class="card-body">El docente aún no asignó los roles.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">⭐ Mis estrellas</div>
+      <div class="mgrid">
+        <div class="met"><div class="mnum" id="est-avg-stars" style="color:var(--gold)">—</div><div class="mlbl">Promedio</div></div>
+        <div class="met"><div class="mnum" id="est-total-roles">0</div><div class="mlbl">Veces con rol</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="e-mi-analisis" class="section">
+    <div id="est-analisis-content"></div>
+  </div>
+</div>
+
+</div><!-- end content -->
+
+<script>
+const SK='signaled_v4';
+let role=null,student=null,pollIv=null,rolStars={},fisicaStars={};
+
+// ── DATA ──
+function getData(){try{const r=localStorage.getItem(SK);return r?JSON.parse(r):def()}catch(e){return def()}}
+function saveData(d){try{localStorage.setItem(SK,JSON.stringify(d))}catch(e){}}
+function def(){return{teacherCode:'',students:[],clases:[],activeClase:null,roles:{},roleStars:{},signals:{},juicio:null,juicioVotes:{},claseHistory:{}}}
+function initials(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}
+function barColor(v){return v>=3?'bar-g':v===2?'bar-y':'bar-r'}
+function signalLabel(v){return['','No entendí nada','Tengo dudas','Casi entendí','Entendí todo'][v]}
+function signalColor(v){return v>=3?'var(--ok)':v===2?'var(--warn)':'var(--err)'}
+function renderStars(n,fn){return[1,2,3,4,5].map(i=>`<span class="star${i<=n?' on':''}" onclick="${fn}(${i})">★</span>`).join('')}
+
+// ── LOGIN ──
+function showTeacherPin(){
+  document.getElementById('student-login-form').style.display='none';
+  const f=document.getElementById('teacher-pin-form');
+  f.style.display=f.style.display==='none'?'flex':'none';
+  f.style.flexDirection='column';
+  document.getElementById('teacher-pin-error').style.display='none';
+  const d=getData();
+  const hint=document.getElementById('teacher-pin-hint');
+  if(!d.teacherCode){
+    hint.textContent='👋 Primera vez — dejá el campo vacío y entrá directo para configurar tu código';
+    hint.style.color='var(--gold)';
+  } else {
+    hint.textContent='👨‍🏫 Ingresá tu código de docente';
+    hint.style.color='';
+  }
+}
+function showStudentLogin(){
+  document.getElementById('teacher-pin-form').style.display='none';
+  const f=document.getElementById('student-login-form');
+  f.style.display=f.style.display==='none'?'flex':'none';
+  f.style.flexDirection='column';
+  const d=getData();
+  const sel=document.getElementById('student-select');
+  sel.innerHTML='<option value="">Seleccioná tu nombre...</option>';
+  d.students.forEach(s=>{const o=document.createElement('option');o.value=s.name;o.textContent=s.name;sel.appendChild(o)});
+  document.getElementById('student-pin-error').style.display='none';
+}
+function resetStudentPin(){
+  document.getElementById('student-pin-input').value='';
+  document.getElementById('student-pin-error').style.display='none';
+}
+function loginTeacher(){
+  const pin=document.getElementById('teacher-pin-input').value.trim();
+  const d=getData();
+  if(!d.teacherCode){
+    // Primera vez: no hay código, entrar directo
+  } else {
+    if(pin!==d.teacherCode){document.getElementById('teacher-pin-error').style.display='block';return}
+  }
+  role='teacher';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('teacher-view').style.display='block';
+  renderTeacher();startPolling();
+}
+function loginStudent(){
+  const name=document.getElementById('student-select').value;
+  const pin=document.getElementById('student-pin-input').value.trim();
+  if(!name){document.getElementById('student-pin-error').textContent='Seleccioná tu nombre';document.getElementById('student-pin-error').style.display='block';return}
+  const d=getData();
+  const st=d.students.find(s=>s.name===name);
+  if(!st||st.pin!==pin){document.getElementById('student-pin-error').textContent='Código incorrecto';document.getElementById('student-pin-error').style.display='block';return}
+  student=name;role='student';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('student-view').style.display='block';
+  document.getElementById('est-name-badge').textContent='🎓 '+name;
+  refreshStudentView();startPolling();
+}
+function logout(){
+  role=null;student=null;
+  if(pollIv)clearInterval(pollIv);
+  document.getElementById('teacher-view').style.display='none';
+  document.getElementById('student-view').style.display='none';
+  document.getElementById('login-screen').style.display='block';
+  document.getElementById('teacher-pin-input').value='';
+  document.getElementById('student-pin-input').value='';
+  document.getElementById('teacher-pin-form').style.display='none';
+  document.getElementById('student-login-form').style.display='none';
+}
+function startPolling(){
+  if(pollIv)clearInterval(pollIv);
+  pollIv=setInterval(()=>{
+    if(role==='teacher'){refreshSignals();refreshJuicioResults()}
+    if(role==='student'){refreshStudentView()}
+  },3000);
+}
+
+// ── TABS ──
+function tTab(name){
+  document.querySelectorAll('#teacher-view .tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#teacher-view .section').forEach(s=>s.classList.remove('on'));
+  event.target.classList.add('on');
+  document.getElementById('t-'+name).classList.add('on');
+  if(name==='analisis')renderAnalisis();
+  if(name==='clase'){renderClaseTab();refreshSignals()}
+  if(name==='fisica')renderFisicaTab();
+}
+function eTab(name){
+  document.querySelectorAll('#student-view .tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('#student-view .section').forEach(s=>s.classList.remove('on'));
+  event.target.classList.add('on');
+  document.getElementById('e-'+name).classList.add('on');
+  if(name==='mi-analisis')renderEstAnalisis();
+}
+
+// ── TEACHER SETUP ──
+function renderTeacher(){renderStudentList();renderClasesList();renderClaseSelect();renderFisicaClaseSelect();loadTeacherCode()}
+function loadTeacherCode(){
+  const d=getData();
+  if(d.teacherCode){
+    const inp=document.getElementById('teacher-code-input');
+    if(inp)inp.placeholder='Código ya configurado (cambiarlo)';
+  }
+}
+function saveTeacherCode(){
+  const v=document.getElementById('teacher-code-input').value.trim();
+  if(!v){alert('Escribí un código');return}
+  const d=getData();d.teacherCode=v;saveData(d);
+  document.getElementById('teacher-code-status').style.display='block';
+  document.getElementById('teacher-code-input').value='';
+  document.getElementById('teacher-code-input').placeholder='Código ya configurado (cambiarlo)';
+  setTimeout(()=>document.getElementById('teacher-code-status').style.display='none',2500);
+}
+
+function addStudent(){
+  const name=document.getElementById('new-student').value.trim();
+  const pin=document.getElementById('new-student-pin').value.trim();
+  if(!name||!pin){alert('Ingresá nombre y código');return}
+  const d=getData();
+  if(!d.students)d.students=[];
+  if(d.students.find(s=>s.name===name)){alert('Ya existe ese estudiante');return}
+  d.students.push({name,pin});saveData(d);
+  document.getElementById('new-student').value='';
+  document.getElementById('new-student-pin').value='';
+  renderStudentList();
+}
+function removeStudent(name){
+  const d=getData();d.students=d.students.filter(s=>s.name!==name);saveData(d);renderStudentList();
+}
+function renderStudentList(){
+  const d=getData();
+  const el=document.getElementById('student-list-display');if(!el)return;
+  if(!d.students||!d.students.length){el.innerHTML='<div style="font-size:12px;color:var(--ts);padding:.25rem 0">Sin estudiantes aún</div>';return}
+  el.innerHTML=d.students.map(s=>`
+    <div class="srow">
+      <div class="av">${initials(s.name)}</div>
+      <span style="flex:1;font-size:13px;font-weight:600">${s.name}</span>
+      <span style="font-size:11px;color:var(--ts)">🔑 ${'•'.repeat(s.pin.length)}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.name}')" style="margin-left:.5rem">✕</button>
+    </div>`).join('')
+}
+
+function addClass(){
+  const n=document.getElementById('new-clase').value.trim();if(!n)return;
+  const d=getData();if(!d.clases)d.clases=[];
+  const id='c'+Date.now();
+  d.clases.push({id,name:n});
+  if(!d.claseHistory)d.claseHistory={};
+  d.claseHistory[id]={name:n,signals:{},juicios:[],roles:{},roleStars:{}};
+  saveData(d);document.getElementById('new-clase').value='';
+  renderClasesList();renderClaseSelect();renderFisicaClaseSelect();
+}
+function removeClase(id){
+  const d=getData();d.clases=d.clases.filter(c=>c.id!==id);
+  if(d.activeClase===id)d.activeClase=null;saveData(d);
+  renderClasesList();renderClaseSelect();
+}
+function renderClasesList(){
+  const d=getData();const el=document.getElementById('clases-list');if(!el)return;
+  if(!d.clases||!d.clases.length){el.innerHTML='<div style="font-size:12px;color:var(--ts);padding:.25rem 0">Sin clases aún</div>';return}
+  el.innerHTML=d.clases.map(c=>`
+    <div class="srow">
+      <span style="font-size:16px">📚</span>
+      <span style="flex:1;font-size:13px;font-weight:600">${c.name}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeClase('${c.id}')">✕</button>
+    </div>`).join('')
+}
+function renderClaseSelect(){
+  const d=getData();const sel=document.getElementById('clase-select');if(!sel)return;
+  sel.innerHTML='<option value="">Seleccioná una clase...</option>';
+  (d.clases||[]).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;if(d.activeClase===c.id)o.selected=true;sel.appendChild(o)});
+}
+function renderFisicaClaseSelect(){
+  const d=getData();const sel=document.getElementById('fisica-clase');if(!sel)return;
+  sel.innerHTML='<option value="">Seleccioná la clase...</option>';
+  (d.clases||[]).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;sel.appendChild(o)});
+}
+
+function selectClase(id){
+  if(!id)return;
+  const d=getData();d.activeClase=id;d.roles={};d.signals={};d.juicio=null;d.juicioVotes={};saveData(d);
+  const c=(d.clases||[]).find(c=>c.id===id);
+  document.getElementById('clase-status').textContent=c?'Clase activa: '+c.name:'';
+  document.getElementById('roles-display').innerHTML='';
+  document.getElementById('role-stars-wrap').style.display='none';
+}
+function renderClaseTab(){renderClaseSelect();renderRolesDisplay()}
+
+// ── RULETA ──
+function girar(){
+  const d=getData();
+  if(!d.activeClase){alert('Seleccioná una clase primero');return}
+  if(!d.students||d.students.length<3){alert('Necesitás al menos 3 estudiantes');return}
+  const icon=document.getElementById('ruleta-icon');
+  icon.classList.add('spinning');
+  setTimeout(()=>{
+    icon.classList.remove('spinning');icon.textContent='✅';
+    const sh=[...d.students].sort(()=>Math.random()-.5);
+    d.roles={capitan:sh[0].name,narrador:sh[1].name,radar:sh[2].name};
+    rolStars={};
+    if(d.claseHistory&&d.claseHistory[d.activeClase])d.claseHistory[d.activeClase].roles=d.roles;
+    saveData(d);renderRolesDisplay();
+    document.getElementById('role-stars-wrap').style.display='block';
+    renderRoleStarsInput();
+  },1400);
+}
+function renderRolesDisplay(){
+  const d=getData();const el=document.getElementById('roles-display');
+  if(!d.roles||!d.roles.capitan){el.innerHTML='';return}
+  const rd=[
+    {icon:'👑',name:'El Capitán',who:d.roles.capitan,bg:'rgba(244,196,48,0.1)',border:'rgba(244,196,48,0.3)'},
+    {icon:'🎙️',name:'El Narrador',who:d.roles.narrador,bg:'rgba(187,184,236,0.1)',border:'rgba(187,184,236,0.25)'},
+    {icon:'👁️',name:'El Radar',who:d.roles.radar,bg:'rgba(34,197,94,0.08)',border:'rgba(34,197,94,0.2)'},
+  ];
+  el.innerHTML=rd.map(r=>`
+    <div class="srow" style="background:${r.bg};border-color:${r.border}">
+      <span style="font-size:20px;width:28px;text-align:center">${r.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:10px;color:var(--ts);font-weight:600;letter-spacing:.5px">${r.name}</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:14px;font-weight:700">${r.who}</div>
+      </div>
+    </div>`).join('')
+}
+function renderRoleStarsInput(){
+  const d=getData();const el=document.getElementById('role-stars-content');if(!el)return;
+  const roles=[
+    {key:'capitan',icon:'👑',who:d.roles.capitan},
+    {key:'narrador',icon:'🎙️',who:d.roles.narrador},
+    {key:'radar',icon:'👁️',who:d.roles.radar},
+  ];
+  el.innerHTML=roles.map(r=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem">
+      <span style="font-size:16px">${r.icon}</span>
+      <span style="font-size:13px;font-weight:600;flex:1">${r.who}</span>
+      <div id="rs-${r.key}">${renderStars(rolStars[r.key]||0,'setRS_'+r.key)}</div>
+    </div>`).join('');
+  roles.forEach(r=>{
+    window['setRS_'+r.key]=function(n){
+      rolStars[r.key]=n;
+      const d2=getData();
+      if(!d2.roleStars)d2.roleStars={};
+      if(!d2.roleStars[d2.roles[r.key]])d2.roleStars[d2.roles[r.key]]=[];
+      d2.roleStars[d2.roles[r.key]].push(n);
+      if(d2.claseHistory&&d2.claseHistory[d2.activeClase]){
+        if(!d2.claseHistory[d2.activeClase].roleStars)d2.claseHistory[d2.activeClase].roleStars={};
+        d2.claseHistory[d2.activeClase].roleStars[r.key]={who:d2.roles[r.key],stars:n};
+      }
+      saveData(d2);renderRoleStarsInput();
+    };
+  });
+}
+
+// ── SEÑALES ──
+function refreshSignals(){
+  const d=getData();const el=document.getElementById('signals-list');if(!el)return;
+  if(!d.students||!d.students.length){el.innerHTML='<div style="font-size:12px;color:var(--ts)">Sin estudiantes</div>';return}
+  const sigs=d.signals||{};let total=0,count=0;
+  el.innerHTML=d.students.map(s=>{
+    const v=sigs[s.name]||0;if(v){total+=v;count++}
+    const bc=v?barColor(v):'bar-off';
+    const bars=[1,2,3,4].map(i=>`<div class="bar b${i} ${i<=v?bc:'bar-off'}"></div>`).join('');
+    const lbl=v?signalLabel(v):'Sin señal';
+    const tagC=v>=3?'tag-ok':v===2?'tag-warn':v===1?'tag-err':'tag-purple';
+    return`<div class="srow">
+      <div class="av">${initials(s.name)}</div>
+      <span style="flex:1;font-size:13px;font-weight:600">${s.name}</span>
+      <div class="bars">${bars}</div>
+      <span class="tag ${tagC}" style="min-width:90px;justify-content:center;font-size:10px">${lbl}</span>
+    </div>`;
+  }).join('');
+  const avg=count?(total/count).toFixed(1):'—';
+  const ab=document.getElementById('avg-signal');
+  if(ab){ab.textContent='Promedio: '+avg;ab.className='tag '+(count&&total/count<2.5?'tag-err':'tag-purple')}
+  const alertBox=document.getElementById('alert-box');
+  if(alertBox){
+    if(count&&total/count<2.5)alertBox.innerHTML='<div class="alert a-warn">⚠️ Señal baja — el grupo necesita una pausa</div>';
+    else if(count)alertBox.innerHTML='<div class="alert a-ok">✅ El grupo está entendiendo bien</div>';
+    else alertBox.innerHTML='';
+  }
+}
+
+// ── JUICIO ──
+let juicioAnswer=null;
+function selectJuicioAnswer(ans){
+  juicioAnswer=ans;
+  document.getElementById('j-ans-ok').style.opacity=ans==='ok'?'1':'0.35';
+  document.getElementById('j-ans-no').style.opacity=ans==='no'?'1':'0.35';
+  document.getElementById('j-ans-ok').style.transform=ans==='ok'?'translateY(-2px)':'none';
+  document.getElementById('j-ans-no').style.transform=ans==='no'?'translateY(-2px)':'none';
+}
+function lanzarJuicio(){
+  const q=document.getElementById('juicio-q').value.trim();if(!q){alert('Escribí una afirmación');return}
+  if(!juicioAnswer){alert('Seleccioná la respuesta correcta primero');return}
+  const d=getData();d.juicio={q,answer:juicioAnswer,active:true,ts:Date.now()};d.juicioVotes={};saveData(d);
+  document.getElementById('juicio-results-card').style.display='block';
+  const rev=document.getElementById('juicio-correct-reveal');
+  if(rev)rev.innerHTML=`<div class="alert ${juicioAnswer==='ok'?'a-ok':'a-warn'}">Respuesta correcta: ${juicioAnswer==='ok'?'✅ Inocente — es correcta':'❌ Culpable — es incorrecta'}</div>`;
+  refreshJuicioResults();
+}
+function cerrarJuicio(){
+  const d=getData();
+  if(d.juicio&&d.activeClase){
+    if(!d.claseHistory)d.claseHistory={};
+    if(!d.claseHistory[d.activeClase]){const cl=(d.clases||[]).find(c=>c.id===d.activeClase);d.claseHistory[d.activeClase]={name:cl?cl.name:'',signals:{},juicios:[],roles:{},roleStars:{}}}
+    if(!d.claseHistory[d.activeClase].juicios)d.claseHistory[d.activeClase].juicios=[];
+    const votes=d.juicioVotes||{};
+    const answer=d.juicio.answer;
+    const ok=Object.values(votes).filter(v=>v==='ok').length;
+    const no=Object.values(votes).filter(v=>v==='no').length;
+    // calcular aciertos por estudiante
+    const aciertos={};
+    Object.entries(votes).forEach(([sname,vote])=>{aciertos[sname]=vote===answer});
+    d.claseHistory[d.activeClase].juicios.push({q:d.juicio.q,answer,ok,no,aciertos});
+    d.claseHistory[d.activeClase].signals={...d.signals};
+  }
+  d.juicio=null;d.juicioVotes={};saveData(d);
+  juicioAnswer=null;
+  document.getElementById('juicio-results-card').style.display='none';
+  document.getElementById('juicio-q').value='';
+  document.getElementById('j-ans-ok').style.opacity='0.45';
+  document.getElementById('j-ans-no').style.opacity='0.45';
+  document.getElementById('j-ans-ok').style.transform='none';
+  document.getElementById('j-ans-no').style.transform='none';
+  const rev=document.getElementById('juicio-correct-reveal');
+  if(rev)rev.innerHTML='';
+}
+function refreshJuicioResults(){
+  const d=getData();const votes=d.juicioVotes||{};const answer=d.juicio&&d.juicio.answer;
+  const ok=Object.values(votes).filter(v=>v==='ok').length;
+  const no=Object.values(votes).filter(v=>v==='no').length;
+  const total=ok+no;
+  const correct=answer?Object.values(votes).filter(v=>v===answer).length:0;
+  const okEl=document.getElementById('j-ok-count');
+  const noEl=document.getElementById('j-no-count');
+  const totEl=document.getElementById('j-total');
+  const corrEl=document.getElementById('j-correct-count');
+  if(okEl)okEl.textContent=ok;if(noEl)noEl.textContent=no;if(totEl)totEl.textContent=total;
+  if(corrEl)corrEl.textContent=total?correct+'/'+ total:'—';
+  const prev=document.getElementById('juicio-preview');
+  if(prev&&total>0&&answer){
+    const pct=Math.round(correct/total*100);
+    prev.innerHTML=`<div class="prog" style="margin-top:.75rem"><div class="prog-fill" style="width:${pct}%;background:${pct>=60?'var(--ok)':'var(--err)'}"></div></div>
+    <div style="font-size:11px;color:var(--ts);margin-top:4px;text-align:center;font-weight:600">${pct}% respondieron correctamente</div>`;
+  }
+}
+
+// ── ANÁLISIS ──
+function renderAnalisis(){
+  const d=getData();const el=document.getElementById('analisis-content');if(!el)return;
+  const clases=Object.entries(d.claseHistory||{});
+  if(!clases.length){el.innerHTML='<div class="card"><div class="card-body" style="text-align:center;padding:1.5rem">Sin datos aún. Completá al menos una clase.</div></div>';return}
+  let globalSignals={},globalStars={};let html='';
+  clases.forEach(([cid,cdata])=>{
+    const sigVals=Object.values(cdata.signals||{}).filter(v=>v>0);
+    const avgSig=sigVals.length?(sigVals.reduce((a,b)=>a+b,0)/sigVals.length).toFixed(1):null;
+    const jTotal=(cdata.juicios||[]).reduce((a,j)=>a+(j.ok+j.no),0);
+    const jOk=(cdata.juicios||[]).reduce((a,j)=>a+j.ok,0);
+    const jPct=jTotal?Math.round(jOk/jTotal*100):null;
+    Object.entries(cdata.signals||{}).forEach(([s,v])=>{if(v){if(!globalSignals[s])globalSignals[s]=[];globalSignals[s].push(v)}});
+    if(cdata.roleStars)Object.values(cdata.roleStars).forEach(rs=>{if(!globalStars[rs.who])globalStars[rs.who]=[];globalStars[rs.who].push(rs.stars)});
+    html+=`<div class="card">
+      <div class="card-title">📚 ${cdata.name||cid}</div>
+      <div class="mgrid">
+        <div class="met"><div class="mnum" style="color:var(--v4)">${avgSig||'—'}</div><div class="mlbl">Señal prom.</div></div>
+        <div class="met"><div class="mnum" style="color:${jPct!==null&&jPct>=60?'var(--ok)':'var(--err)'}">${jPct!==null?jPct+'%':'—'}</div><div class="mlbl">Juicio</div></div>
+      </div>
+      ${cdata.roles&&cdata.roles.capitan?`<div style="font-size:11px;color:var(--ts);margin-bottom:.5rem">👑 ${cdata.roles.capitan} · 🎙️ ${cdata.roles.narrador} · 👁️ ${cdata.roles.radar}</div>`:''}
+      ${(cdata.juicios||[]).map(j=>{
+        const total=j.ok+j.no;
+        const correct=j.answer?Object.values(j.aciertos||{}).filter(v=>v).length:(j.ok);
+        const p=total?Math.round(correct/total*100):0;
+        const ansLabel=j.answer==='ok'?'✅ Inocente':'❌ Culpable';
+        return`<div style="font-size:11px;color:var(--ts);margin:.2rem 0">⚖️ "${j.q.substring(0,45)}..." — <span style="font-weight:600">${ansLabel}</span> — <span style="color:${p>=60?'var(--ok)':'var(--err)'};font-weight:600">${p}% acertaron</span></div>`;
+      }).join('')}
+    </div>`;
+  });
+  html+=`<div class="card"><div class="card-title">👥 Rendimiento global</div>`;
+  (d.students||[]).forEach(s=>{
+    const sigs=globalSignals[s.name]||[];
+    const avgS=sigs.length?(sigs.reduce((a,b)=>a+b,0)/sigs.length).toFixed(1):null;
+    const stars=globalStars[s.name]||[];
+    const avgSt=stars.length?(stars.reduce((a,b)=>a+b,0)/stars.length).toFixed(1):null;
+    const sc=avgS>=3?'var(--ok)':avgS>=2?'var(--warn)':'var(--err)';
+    // calcular aciertos en juicios
+    let jAciertos=0,jTotal=0;
+    clases.forEach(([,cd])=>{(cd.juicios||[]).forEach(j=>{if(j.aciertos&&s.name in j.aciertos){jTotal++;if(j.aciertos[s.name])jAciertos++}})});
+    const jPct=jTotal?Math.round(jAciertos/jTotal*100):null;
+    html+=`<div class="srow">
+      <div class="av">${initials(s.name)}</div>
+      <span style="flex:1;font-size:13px;font-weight:600">${s.name}</span>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:${avgS?sc:'var(--ts)'};font-weight:600">${avgS?'📡 '+avgS+'/4':'📡 —'}</div>
+        <div style="font-size:11px;color:var(--gold);font-weight:600">${avgSt?'★ '+avgSt:'★ —'}</div>
+        <div style="font-size:11px;color:${jPct!==null&&jPct>=60?'var(--ok)':'var(--ts)'};font-weight:600">${jPct!==null?'⚖️ '+jPct+'%':'⚖️ —'}</div>
+      </div>
+    </div>`;
+  });
+  html+='</div>';el.innerHTML=html;
+}
+
+// ── FÍSICA ──
+function renderFisicaTab(){
+  const d=getData();renderFisicaClaseSelect();
+  const el=document.getElementById('fisica-students');if(!el)return;
+  if(!d.students||!d.students.length){el.innerHTML='<div style="font-size:12px;color:var(--ts)">Sin estudiantes</div>';return}
+  el.innerHTML=d.students.map(s=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.55rem">
+      <div class="av">${initials(s.name)}</div>
+      <span style="font-size:13px;font-weight:600;flex:1">${s.name}</span>
+      <div id="fst-${s.name.replace(/\s/g,'_')}" style="display:flex;gap:1px">${[1,2,3,4,5].map(i=>`<span class="star" onclick="setFisicaStar('${s.name}',${i})">★</span>`).join('')}</div>
+      <input type="number" min="0" max="10" placeholder="Part." style="width:52px;font-size:12px;padding:4px 7px" id="fp-${s.name.replace(/\s/g,'_')}">
+    </div>`).join('');
+}
+function setFisicaStar(s,n){
+  fisicaStars[s]=n;
+  const id=s.replace(/\s/g,'_');
+  document.querySelectorAll(`#fst-${id} .star`).forEach((st,i)=>st.classList.toggle('on',i<n));
+}
+function guardarFisica(){
+  const cid=document.getElementById('fisica-clase').value;if(!cid){alert('Seleccioná una clase');return}
+  const d=getData();
+  if(!d.claseHistory)d.claseHistory={};
+  if(!d.claseHistory[cid]){const cl=(d.clases||[]).find(c=>c.id===cid);d.claseHistory[cid]={name:cl?cl.name:'',signals:{},juicios:[],roles:{},roleStars:{}}}
+  (d.students||[]).forEach(s=>{
+    const id=s.name.replace(/\s/g,'_');
+    const stars=fisicaStars[s.name]||0;
+    const part=parseInt(document.getElementById('fp-'+id)?.value)||0;
+    if(!d.claseHistory[cid].fisicaData)d.claseHistory[cid].fisicaData={};
+    d.claseHistory[cid].fisicaData[s.name]={stars,participacion:part};
+    if(stars)d.claseHistory[cid].signals[s.name]=Math.round(stars*4/5);
+  });
+  saveData(d);alert('✅ Datos guardados');
+}
+
+// ── STUDENT VIEW ──
+function refreshStudentView(){
+  const d=getData();
+  const clase=d.activeClase?(d.clases||[]).find(c=>c.id===d.activeClase):null;
+  const infoEl=document.getElementById('clase-info-text');
+  if(infoEl)infoEl.textContent=clase?'Clase activa: '+clase.name:'Sin clase activa aún';
+  const rolDescEl=document.getElementById('rol-desc-text');
+  if(rolDescEl&&d.roles){
+    if(d.roles.capitan===student)
+      rolDescEl.innerHTML='<div style="font-size:20px;margin-bottom:.5rem">👑 El Capitán</div><div>Sos la voz del grupo. Cuando no entiendan, sé el primero en decirlo. Preguntá si algún compañero quiere explicar — vos organizás, no explicás.</div>';
+    else if(d.roles.narrador===student)
+      rolDescEl.innerHTML='<div style="font-size:20px;margin-bottom:.5rem">🎙️ El Narrador</div><div>Escuchá atento toda la clase. Al final resumí el tema del día con tus propias palabras ante tus compañeros.</div>';
+    else if(d.roles.radar===student)
+      rolDescEl.innerHTML='<div style="font-size:20px;margin-bottom:.5rem">👁️ El Radar</div><div>Observá sin interrumpir. Anotá quién participó, estuvo atento o generó desorden. Entregá el reporte al docente al final.</div>';
+    else
+      rolDescEl.innerHTML=d.roles.capitan?'Hoy no tenés rol asignado. Participá activamente en el Juicio.':'El docente aún no asignó los roles.';
+  }
+  const juicioEl=document.getElementById('juicio-est-content');
+  if(juicioEl){
+    if(d.juicio&&d.juicio.active){
+      const myVote=d.juicioVotes&&d.juicioVotes[student];
+      juicioEl.innerHTML=`
+        <div style="font-size:10px;color:var(--ts);margin-bottom:.5rem;font-family:'Nunito',sans-serif;font-weight:700;letter-spacing:1px">PREGUNTA DEL DOCENTE</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;margin-bottom:1rem;line-height:1.5">"${d.juicio.q}"</div>
+        ${myVote
+          ?`<div class="alert ${myVote==='ok'?'a-ok':'a-warn'}">Votaste: ${myVote==='ok'?'✅ Inocente — Es correcto':'❌ Culpable — Es incorrecto'}</div>`
+          :`<div style="display:flex;gap:.75rem">
+            <button class="jbtn j-ok" onclick="votar('ok')">✅ Inocente<br><span style="font-size:11px;font-weight:400">Es correcto</span></button>
+            <button class="jbtn j-no" onclick="votar('no')">❌ Culpable<br><span style="font-size:11px;font-weight:400">Es incorrecto</span></button>
+          </div>`}`;
+    } else {
+      // Juicio cerrado — buscar el último juicio del historial y mostrar resultado del estudiante
+      const activeClase=d.activeClase;
+      const lastJuicio=activeClase&&d.claseHistory&&d.claseHistory[activeClase]
+        ?(d.claseHistory[activeClase].juicios||[]).slice(-1)[0]:null;
+      if(lastJuicio&&lastJuicio.aciertos&&student in lastJuicio.aciertos){
+        const acerto=lastJuicio.aciertos[student];
+        const ansLabel=lastJuicio.answer==='ok'?'✅ Inocente (era correcta)':'❌ Culpable (era incorrecta)';
+        juicioEl.innerHTML=`
+          <div style="font-size:10px;color:var(--ts);margin-bottom:.5rem;font-family:'Nunito',sans-serif;font-weight:700;letter-spacing:1px">ÚLTIMO JUICIO — RESULTADO</div>
+          <div style="font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;margin-bottom:.75rem;line-height:1.5">"${lastJuicio.q}"</div>
+          <div style="font-size:12px;color:var(--ts);margin-bottom:.5rem">Respuesta correcta: <strong>${ansLabel}</strong></div>
+          <div class="alert ${acerto?'a-ok':'a-warn'}" style="font-size:14px">${acerto?'🎉 ¡Acertaste!':'😕 No acertaste esta vez'}</div>`;
+      } else {
+        juicioEl.innerHTML='<div class="card-body" style="text-align:center;padding:1.5rem 0">El docente aún no ha lanzado El Juicio.</div>';
+      }
+    }
+  }
+  renderEstStars();
+  const rangeEl=document.getElementById('est-signal');
+  if(rangeEl)updateRangeTrack(rangeEl);
+}
+function updateRangeTrack(el){
+  const min=parseInt(el.min)||1,max=parseInt(el.max)||4,val=parseInt(el.value)||3;
+  const pct=Math.round((val-min)/(max-min)*100);
+  el.style.setProperty('--val',pct+'%');
+}
+function sendSignal(val){
+  const rangeEl=document.getElementById('est-signal');
+  if(rangeEl)updateRangeTrack(rangeEl);
+  const d=getData();if(!d.signals)d.signals={};
+  d.signals[student]=parseInt(val);saveData(d);
+  const bars=document.querySelectorAll('#est-bars .bar');
+  const v=parseInt(val);const bc=barColor(v);
+  bars.forEach((b,i)=>{b.className=`bar b${i+1} ${i<v?bc:'bar-off'}`});
+  const lbl=document.getElementById('est-signal-label');
+  if(lbl){lbl.textContent=signalLabel(v);lbl.style.color=signalColor(v)}
+}
+function votar(tipo){
+  const d=getData();if(!d.juicioVotes)d.juicioVotes={};
+  d.juicioVotes[student]=tipo;saveData(d);refreshStudentView();
+}
+function renderEstStars(){
+  const d=getData();
+  const stars=(d.roleStars||{})[student]||[];
+  const avg=stars.length?(stars.reduce((a,b)=>a+b,0)/stars.length).toFixed(1):'—';
+  const avgEl=document.getElementById('est-avg-stars');
+  const totEl=document.getElementById('est-total-roles');
+  if(avgEl)avgEl.textContent=avg!=='—'?'★ '+avg:'—';
+  if(totEl)totEl.textContent=stars.length;
+}
+function renderEstAnalisis(){
+  const d=getData();const el=document.getElementById('est-analisis-content');if(!el)return;
+  const clases=Object.entries(d.claseHistory||{});
+  if(!clases.length){el.innerHTML='<div class="card"><div class="card-body" style="text-align:center;padding:1.5rem">Sin datos de clases aún.</div></div>';return}
+  let totalSig=0,countSig=0,totalStars=0,countStars=0,totalJuicios=0,aciertosJuicios=0;let classesHtml='';
+  clases.forEach(([cid,cdata])=>{
+    const mySig=(cdata.signals||{})[student];
+    const myStars=cdata.roleStars?Object.values(cdata.roleStars).find(r=>r.who===student):null;
+    if(mySig){totalSig+=mySig;countSig++}
+    if(myStars){totalStars+=myStars.stars;countStars++}
+    const myRole=cdata.roles?cdata.roles.capitan===student?'👑':cdata.roles.narrador===student?'🎙️':cdata.roles.radar===student?'👁️':'':'';
+    // juicios de esta clase
+    let jHtml='';
+    (cdata.juicios||[]).forEach(j=>{
+      if(j.aciertos&&student in j.aciertos){
+        totalJuicios++;
+        const acerto=j.aciertos[student];
+        if(acerto)aciertosJuicios++;
+        const ansLabel=j.answer==='ok'?'✅ Inocente':'❌ Culpable';
+        jHtml+=`<div style="font-size:11px;margin:.3rem 0;display:flex;align-items:center;gap:6px">
+          <span>${acerto?'🎉':'😕'}</span>
+          <span style="flex:1;color:var(--ts)">"${j.q.substring(0,40)}..."</span>
+          <span style="font-weight:600;color:var(--ts);font-size:10px">${ansLabel}</span>
+        </div>`;
+      }
+    });
+    classesHtml+=`<div class="card">
+      <div class="card-title" style="font-size:12px">📚 ${cdata.name||cid} ${myRole}</div>
+      <div style="display:flex;gap:1.5rem;font-size:12px;margin-bottom:${jHtml?'.5rem':'0'}">
+        <span style="color:${mySig?signalColor(mySig):'var(--ts)'};font-weight:600">📡 ${mySig?mySig+'/4':'—'}</span>
+        <span style="color:var(--gold);font-weight:600">★ ${myStars?myStars.stars+'/5':'—'}</span>
+      </div>
+      ${jHtml}
+    </div>`;
+  });
+  const avgSig=countSig?(totalSig/countSig).toFixed(1):null;
+  const avgSt=countStars?(totalStars/countStars).toFixed(1):null;
+  const jPct=totalJuicios?Math.round(aciertosJuicios/totalJuicios*100):null;
+  el.innerHTML=`<div class="mgrid">
+    <div class="met"><div class="mnum" style="color:${avgSig>=3?'var(--ok)':avgSig?'var(--warn)':'var(--ts)'}">${avgSig?avgSig+'/4':'—'}</div><div class="mlbl">Señal global</div></div>
+    <div class="met"><div class="mnum" style="color:var(--gold)">${avgSt?'★ '+avgSt:'—'}</div><div class="mlbl">Prom. roles</div></div>
+    <div class="met"><div class="mnum" style="color:${jPct!==null&&jPct>=60?'var(--ok)':jPct!==null?'var(--err)':'var(--ts)'}">${jPct!==null?jPct+'%':'—'}</div><div class="mlbl">⚖️ Juicios</div></div>
+    <div class="met"><div class="mnum">${clases.length}</div><div class="mlbl">Clases</div></div>
+  </div>`+classesHtml;
+}
+
+renderTeacher();
+</script>
+</body>
+</html>
